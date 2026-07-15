@@ -1,0 +1,41 @@
+{:itonami.blueprint/id "cloud-itonami-isic-0163"
+ :itonami.blueprint/name "Post-Harvest Crop Activities Coordination"
+ :itonami.blueprint/isic-rev5 "0163"
+ :itonami.blueprint/domain :agriculture/post-harvest-crop-activities
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:food-security :food-safety :post-harvest-loss-reduction]
+ :itonami.blueprint/governor :postharvest-governor
+ :itonami.blueprint/robotics false
+ :itonami.blueprint/required-technologies [:identity :forms :audit-ledger]
+ :itonami.blueprint/optional-technologies [:telemetry]
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/implemented-slice
+ "`:postharvest-governor` is implemented end-to-end in `src/postharvest` as a
+ POST-HARVEST-PROCESSING-FACILITY OPERATIONS COORDINATION actor -- PostHarvest
+ Advisor (LLM proposal-only) ⊣ Post-Harvest Operations Governor (closed-op-
+ allowlist / batch-registration / moisture-defect-foreign-matter-cold-chain
+ hard-gates / unresolved-quality-flag hard-gate). `:itonami.blueprint/robotics`
+ is honestly `false` -- this actor holds NO drying/grading/packing-equipment-
+ control authority (a HARD, permanent governor block, never overridable by
+ human approval -- see `postharvest.governor` ns docstring), matching the
+ same coordination-only shape `cloud-itonami-isic-0164` (Seed processing for
+ propagation) established for the adjacent post-harvest/crop-processing
+ division. Every one of its four proposal ops (`:log-processing-batch` /
+ `:schedule-maintenance` / `:flag-quality-concern` / `:coordinate-shipment`)
+ carries `:effect :propose` ONLY -- the governor HARD-holds any proposal that
+ doesn't (`effect-not-propose-violations`). Unlike ISIC 0164 (seed VIABILITY
+ for planting -- germination rate, varietal purity), this actor's quality bar
+ is FOR-MARKET / FOR-CONSUMPTION product quality: moisture (for dried
+ products such as tea/tobacco -- absent, not fabricated, for fresh produce
+ crop-lot types with no drying step), defect rate, foreign-matter content,
+ pest infestation, pesticide-residue lab flags, and cold-chain temperature
+ (for crop-lot types that require refrigerated handling; absent for dried
+ goods) -- reflecting the general \"crops not covered by more specific
+ classes\" scope of ISIC 0163 (cleaning/trimming/sorting/grading/drying/
+ packing/cold-storage handling for the primary market, excluding grain
+ milling [1061] and seed processing for propagation [0164]). `:flag-quality-
+ concern` always escalates to a human, at every phase, regardless of advisor
+ confidence. This build ships NO JVM-only interop anywhere in `src/` (all
+ source is `.cljc`) per this workspace's cljs-first runtime-priority rule.
+ See `README.md` for the full governor-check enumeration."}

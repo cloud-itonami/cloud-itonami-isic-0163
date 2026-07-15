@@ -1,0 +1,317 @@
+(ns postharvest.governor-test
+  (:require [clojure.test :refer [deftest is testing]]
+            [postharvest.governor :as governor]))
+
+(def ^:private now-ms #?(:clj (System/currentTimeMillis) :cljs (.now js/Date)))
+(def ^:private ten-days-ago (- now-ms (* 10 24 60 60 1000)))
+(def ^:private hundred-days-ago (- now-ms (* 100 24 60 60 1000)))
+
+(def ^:private clean-batch
+  "Baseline clean batch for a dried-goods crop-lot type (tea) -- has a
+  moisture spec but no cold-chain spec."
+  {:crop-lot-type :tea/black-leaf
+   :jurisdiction :jp/mhlw
+   :moisture-percent 3.0
+   :defect-rate-percent 2.0
+   :foreign-matter-percent 0.2
+   :pest-infestation-detected? false
+   :pesticide-residue-exceeded? false
+   :drying-equipment-last-calibration-date ten-days-ago
+   :weight-variance-grams 20
+   :sanitation-score 85
+   :evidence-checklist [:lot-intake-record :cleaning-grading-log :defect-inspection
+                        :foreign-matter-test :pest-inspection :pesticide-residue-test :weight-check]})
+
+(def ^:private clean-cold-chain-batch
+  "Baseline clean batch for a cold-chain crop-lot type (leafy greens) --
+  has a cold-chain spec but no moisture spec."
+  {:crop-lot-type :produce/leafy-greens
+   :jurisdiction :jp/mhlw
+   :cold-storage-temp-c 2.0
+   :defect-rate-percent 1.0
+   :foreign-matter-percent 0.1
+   :pest-infestation-detected? false
+   :pesticide-residue-exceeded? false
+   :drying-equipment-last-calibration-date ten-days-ago
+   :weight-variance-grams 20
+   :sanitation-score 85
+   :evidence-checklist [:lot-intake-record :cleaning-grading-log :defect-inspection
+                        :foreign-matter-test :pest-inspection :pesticide-residue-test :weight-check]})
+
+;; ──────────────────────── Hard Violations ──────────────────────
+
+(deftest spec-basis-violation-test
+  (testing "proposal with no jurisdiction citation is a hard violation"
+    (let [req {:op :log-processing-batch :subject "batch-001"}
+          prop {:cites [] :value {:jurisdiction nil}}
+          result (governor/check req {:actor-id "gov-1"} prop {})]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :no-spec-basis) (:violations result)))))
+
+  (testing "proposal with proper citation passes spec basis check"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id clean-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw}}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (false? (:hard? result))))))
+
+;; ──────────────────────── Moisture Violations ──────────────────────
+
+(deftest moisture-violation-test
+  (testing "batch with moisture out of range triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :moisture-percent 1.0)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :moisture-out-of-target) (:violations result)))))
+
+  (testing "batch with moisture in range passes"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id clean-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (false? (:hard? result)))))
+
+  (testing "crop-lot type with no moisture spec (fresh produce) never triggers this rule"
+    (let [batch-id "batch-002"
+          store {:batches {batch-id clean-cold-chain-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (not (some #(= (:rule %) :moisture-out-of-target) (:violations result)))))))
+
+;; ──────────────────────── Defect Rate Violations ──────────────────────
+
+(deftest defect-rate-violation-test
+  (testing "batch with defect rate above the crop-lot type's maximum triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :defect-rate-percent 9.0)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :defect-rate-exceeded) (:violations result)))))
+
+  (testing "leafy greens crop-lot has a much tighter defect-rate floor than tea"
+    (let [batch-id "batch-002"
+          store {:batches {batch-id (assoc clean-cold-chain-batch :defect-rate-percent 2.5)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :defect-rate-exceeded) (:violations result))))))
+
+;; ──────────────────────── Foreign Matter Violations ──────────────────────
+
+(deftest foreign-matter-violation-test
+  (testing "batch with foreign matter exceeding tolerance triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :foreign-matter-percent 2.0)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :foreign-matter-exceeded) (:violations result))))))
+
+;; ──────────────────────── Pest Infestation Violations ──────────────────────
+
+(deftest pest-infestation-violation-test
+  (testing "batch with detected pest infestation triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :pest-infestation-detected? true)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :pest-infestation-detected) (:violations result))))))
+
+;; ──────────────────────── Pesticide Residue Violations ──────────────────────
+
+(deftest pesticide-residue-violation-test
+  (testing "batch with pesticide-residue exceedance triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :pesticide-residue-exceeded? true)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :pesticide-residue-exceeded) (:violations result))))))
+
+;; ──────────────────────── Drying-Equipment Calibration Violations ──────────────────────
+
+(deftest drying-equipment-calibration-violation-test
+  (testing "batch with overdue drying-equipment calibration triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :drying-equipment-last-calibration-date hundred-days-ago)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :drying-equipment-calibration-overdue) (:violations result))))))
+
+;; ──────────────────────── Weight Variance Violations ──────────────────────
+
+(deftest weight-variance-violation-test
+  (testing "batch with excessive weight variance triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :weight-variance-grams 75)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :weight-variance-excessive) (:violations result))))))
+
+;; ──────────────────────── Cold-Storage Temperature Violations ──────────────────────
+
+(deftest cold-storage-temp-violation-test
+  (testing "batch with cold-storage temperature out of range triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-cold-chain-batch :cold-storage-temp-c 6.0)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :cold-storage-temp-out-of-range) (:violations result)))))
+
+  (testing "batch with cold-storage temperature in range passes"
+    (let [batch-id "batch-002"
+          store {:batches {batch-id clean-cold-chain-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (false? (:hard? result)))))
+
+  (testing "crop-lot type with no cold-chain requirement (dried goods) never triggers this rule"
+    (let [batch-id "batch-003"
+          store {:batches {batch-id clean-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (not (some #(= (:rule %) :cold-storage-temp-out-of-range) (:violations result)))))))
+
+;; ──────────────────────── Sanitation Score Violations ──────────────────────
+
+(deftest sanitation-score-violation-test
+  (testing "batch with insufficient sanitation score triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch :sanitation-score 60)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :sanitation-score-insufficient) (:violations result))))))
+
+;; ──────────────────────── Quality Flag Violations ──────────────────────
+
+(deftest quality-flag-unresolved-violation-test
+  (testing "batch with an unresolved quality flag triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id (assoc clean-batch
+                                            :quality-concern-raised? true
+                                            :quality-concern-resolved? false)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :quality-flag-unresolved) (:violations result)))))
+
+  (testing "batch with a resolved quality flag does not trigger this rule"
+    (let [batch-id "batch-002"
+          store {:batches {batch-id (assoc clean-batch
+                                            :quality-concern-raised? true
+                                            :quality-concern-resolved? true)}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (not (some #(= (:rule %) :quality-flag-unresolved) (:violations result)))))))
+
+;; ──────────────────────── Escalation (Low Confidence) ──────────────────────
+
+(deftest low-confidence-escalation-test
+  (testing "low confidence proposal escalates even when hard checks pass"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id clean-batch}}
+          req {:op :schedule-maintenance :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.5}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (false? (:ok? result)))
+      (is (true? (:escalate? result)))
+      (is (false? (:hard? result))))))
+
+;; ──────────────────────── High Stakes Escalation ──────────────────────
+
+(deftest high-stakes-escalation-test
+  (testing "log-processing-batch escalates even when all checks pass"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id clean-batch}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.95}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (false? (:ok? result)))
+      (is (true? (:escalate? result)))
+      (is (false? (:hard? result))))))
+
+;; ──────────────────────── Already Processed Violation ──────────────────────
+
+(deftest already-processed-violation-test
+  (testing "batch already processed triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id
+                           {:crop-lot-type :tea/black-leaf
+                            :processed? true}}}
+          req {:op :log-processing-batch :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :already-processed) (:violations result))))))
+
+;; ──────────────────────── Already Shipment Finalized Violation ──────────────────────
+
+(deftest already-shipment-finalized-violation-test
+  (testing "batch shipment already finalized triggers hard violation"
+    (let [batch-id "batch-001"
+          store {:batches {batch-id
+                           {:crop-lot-type :tea/black-leaf
+                            :shipment-finalized? true}}}
+          req {:op :coordinate-shipment :subject batch-id}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :already-shipment-finalized) (:violations result))))))
+
+;; ──────────────────────── Batch Not Registered Violation ──────────────────────
+
+(deftest batch-not-registered-violation-test
+  (testing "coordinating shipment for a never-registered batch is a hard block"
+    (let [store {:batches {}}
+          req {:op :coordinate-shipment :subject "batch-999"}
+          prop {:cites [{:spec "ISO-12345"}] :value {:jurisdiction :jp/mhlw} :confidence 0.8}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :batch-not-registered) (:violations result))))))
+
+;; ──────────────────────── Op-Not-Allowed Violation ──────────────────────
+
+(deftest op-not-allowed-violation-test
+  (testing "an out-of-allowlist op (e.g. direct drying/grading-equipment control) is a hard, permanent block"
+    (let [store {:batches {"batch-001" clean-batch}}
+          req {:op :control-drying-line :subject "batch-001"}
+          prop {:cites [{:spec "Drying-Line-Manual"}] :value {:jurisdiction :jp/mhlw} :confidence 0.99}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :op-not-allowed) (:violations result))))))
+
+;; ──────────────────────── Effect-Not-Propose Violation ──────────────────────
+
+(deftest effect-not-propose-violation-test
+  (testing "a proposal asserting a non-:propose effect is a hard, permanent block"
+    (let [store {:batches {"batch-001" clean-batch}}
+          req {:op :schedule-maintenance :subject "batch-001"}
+          prop {:effect :commit :cites [{:spec "Equipment-Manual"}] :value {:jurisdiction :jp/mhlw} :confidence 0.9}
+          result (governor/check req {:actor-id "gov-1"} prop store)]
+      (is (true? (:hard? result)))
+      (is (some #(= (:rule %) :effect-not-propose) (:violations result))))))
