@@ -1,13 +1,11 @@
 {:paths ["src"]
- ;; The actor itself (`src/postharvest/*.cljc`) has no third-party
- ;; dependency. jp-go-digital-design-system is needed only by the
- ;; build-time console generator (`postharvest.render-html`), which reads
- ;; the design system's token block and skin rules to style the page
- ;; instead of hand-writing CSS. Pinned to the same sha the rest of the
- ;; cloud-itonami fleet renders with.
- :deps {io.github.kotoba-lang/jp-go-digital-design-system
-        {:git/url "https://github.com/kotoba-lang/jp-go-digital-design-system"
-         :git/sha "83db99546eabc53613ae826ea41d1533a3c574af"}}
+ ;; No third-party dependency, by design. The actor
+ ;; (`src/postharvest/*.cljc`) needs none, and the build-time console
+ ;; generator (`postharvest.render-html`) styles itself from the DADS
+ ;; primitives this repo ALREADY vendors into `docs/index.html`, so
+ ;; regenerating the console works offline (fleet CI nodes have no
+ ;; guaranteed egress) and cannot drift away from the product face.
+ :deps {}
  :aliases
  {:dev {:override-deps
         {io.github.kotoba-lang/langchain
