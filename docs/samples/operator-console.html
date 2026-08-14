@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>cloud-itonami-isic-0163 · post-harvest crop activities — Operator Console</title><style>
+/* DADS primitives extracted at build time from docs/index.html (vendored from digital-go-jp/design-system-example-components-html,
+   MIT, (c) 2025 デジタル庁). Only the 21 tokens this page references are inlined. */
+:root{--color-key-900:var(--color-primitive-blue-900);--color-neutral-solid-gray-200:#cccccc;--color-neutral-solid-gray-300:#b3b3b3;--color-neutral-solid-gray-50:#f2f2f2;--color-neutral-solid-gray-600:#666666;--color-neutral-solid-gray-800:#333333;--color-neutral-solid-gray-900:#1a1a1a;--color-neutral-white:#ffffff;--color-primitive-blue-200:#c5d7fb;--color-primitive-blue-50:#e8f1fe;--color-primitive-blue-900:#0017c1;--color-primitive-green-800:#197a4b;--color-primitive-red-200:#ffbbbb;--color-primitive-red-50:#fdeeee;--color-primitive-red-800:#ec0000;--color-primitive-yellow-900:#927200;--color-semantic-error-1:var(--color-primitive-red-800);--color-semantic-success-2:var(--color-primitive-green-800);--color-semantic-warning-yellow-2:var(--color-primitive-yellow-900);--font-family-mono:"Noto Sans Mono", monospace;--font-family-sans:"Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;}
+body{font-family:var(--font-family-sans);color:var(--color-neutral-solid-gray-800);background:var(--color-neutral-white);line-height:1.8;max-width:96rem;margin:0 auto;padding:2rem 1rem 4rem}
+h1{font-size:2.125rem;font-weight:700;line-height:1.4;margin:0;color:var(--color-neutral-solid-gray-900)}
+h2{font-size:1.5rem;font-weight:700;line-height:1.5;margin:0 0 .75rem;padding-bottom:.5rem;border-bottom:1px solid var(--color-neutral-solid-gray-200);color:var(--color-neutral-solid-gray-900)}
+h3{font-size:1.25rem;font-weight:700;line-height:1.5;margin:0 0 .5rem;color:var(--color-neutral-solid-gray-900)}
+p{margin:0 0 1rem}
+ul{margin:0 0 1rem;padding-left:1.25rem}
+li{margin-block:.25rem}
+table{display:block;overflow-x:auto;max-width:100%;border-collapse:collapse;width:100%;margin:.75rem 0 .5rem;font-size:.875rem}
+th,td{border:1px solid var(--color-neutral-solid-gray-300);padding:.5rem .75rem;text-align:left;vertical-align:top}
+th{background:var(--color-neutral-solid-gray-50);font-weight:700;white-space:nowrap;color:var(--color-neutral-solid-gray-900)}
+code{font-family:var(--font-family-mono);background:var(--color-neutral-solid-gray-50);border:1px solid var(--color-neutral-solid-gray-200);border-radius:4px;padding:1px 5px;font-size:.9em}
+.ok{color:var(--color-semantic-success-2);font-weight:700}
+.warn{color:var(--color-semantic-warning-yellow-2);font-weight:700}
+.critical{color:var(--color-semantic-error-1);font-weight:700}
+.muted{color:var(--color-neutral-solid-gray-600);font-weight:400}
+tr[data-hard-hold] td{background:var(--color-primitive-red-50);border-color:var(--color-primitive-red-200)}
+.card{border:1px solid var(--color-neutral-solid-gray-200);border-radius:12px;padding:1.25rem 1.5rem;margin:1.25rem 0;background:var(--color-neutral-white)}
+.badge{display:inline-block;font-size:.8125rem;font-weight:700;padding:.1rem .625rem;border-radius:1rem;background:var(--color-primitive-blue-50);color:var(--color-key-900);border:1px solid var(--color-primitive-blue-200)}
+.bar{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;margin-bottom:1rem;border-bottom:1px solid var(--color-neutral-solid-gray-200)}
+footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--color-neutral-solid-gray-200);color:var(--color-neutral-solid-gray-600);font-size:.875rem}
+</style></head><body>
+<header class="bar">
+  <h1>収穫後作物処理 (ISIC 0163) — オペレータコンソール</h1>
+</header>
+<p><span class="badge">read-only sample</span> <span class="badge">governor-gated</span> <span class="badge">バッチ登録・出荷確定は常に人間承認</span></p>
+<main>
+  <section class="card">
+    <h2>この run の要約</h2>
+    <p>このページは <code>postharvest.render-html</code> がビルド時に生成した。表示されている判定はすべて <code>postharvest.operation/run-operation</code> → <code>postharvest.governor/check</code> → <code>postharvest.store</code> の実行結果で、手書きの結果は 1 件も無い。作物ロット規格・法域の必要証跡・引用する仕様名は <code>postharvest.facts</code> から、バッチ記録の形と clean 実測値は <code>test/postharvest/governor_test.cljc</code> の fixture から取っている（<code>postharvest.sim</code> は未実装のスタブで、この repo には seed データが無い）。</p>
+    <ul>
+      <li><span class="critical">HARD 保留 17 件</span> — 人間には提示されない。承認による上書きは構造的に不可能。</li>
+      <li><span class="warn">エスカレーション 4 件</span> — ガバナは clean だが人間の署名が要る。うち 4 件をこの run で承認した。</li>
+      <li><span class="ok">自動コミット 1 件</span> — このアクタで自動確定しうる唯一の経路（<code>:schedule-maintenance</code>）。</li>
+      <li>台帳 26 件（HARD 保留とエスカレーションはアクタの <code>governor/hold-fact</code> が発行、承認・自動コミットはコンソールが <code>store/append-fact</code> で追記）。</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>バッチ登録簿</h2>
+    <p class="muted">施設が抱えるロット。「最終状態」列は台帳の最後のファクトから導出している。</p>
+    <table>
+      <thead><tr><th>バッチ</th><th>作物ロット種別</th><th>法域</th><th>処理状態</th><th>最終状態</th><th>この run での役割</th></tr></thead>
+      <tbody>
+        <tr><td><code>batch-001</code></td><td>紅茶(リーフ)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="ok">登録済 → 出荷確定</span></td><td><span class="critical">HARD 保留 · already-shipment-finalized</span></td><td><span class="muted">clean dried-goods lot — approved and committed end to end</span></td></tr>
+        <tr><td><code>batch-002</code></td><td>葉物野菜(生鮮)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · effect-not-propose</span></td><td><span class="muted">clean cold-chain lot — routine maintenance auto-commits</span></td></tr>
+        <tr><td><code>batch-003</code></td><td>紅茶(リーフ)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · moisture-out-of-target</span></td><td><span class="muted">finished moisture below the drying window</span></td></tr>
+        <tr><td><code>batch-004</code></td><td>柑橘類(生鮮)</td><td>United States (FSMA Produce Safety Rule / FDA)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · defect-rate-exceeded</span></td><td><span class="muted">defect rate above the crop-lot maximum</span></td></tr>
+        <tr><td><code>batch-005</code></td><td>紅茶(リーフ)</td><td>European Union (General Food Law Regulation (EC) 178/2002)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · foreign-matter-exceeded</span></td><td><span class="muted">foreign matter above the crop-lot maximum</span></td></tr>
+        <tr><td><code>batch-006</code></td><td>紅茶(リーフ)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · pest-infestation-detected</span></td><td><span class="muted">pest infestation on the batch's own inspection</span></td></tr>
+        <tr><td><code>batch-007</code></td><td>フルーキュア葉タバコ</td><td>United States (FSMA Produce Safety Rule / FDA)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · pesticide-residue-exceeded</span></td><td><span class="muted">pesticide-residue laboratory exceedance</span></td></tr>
+        <tr><td><code>batch-008</code></td><td>紅茶(リーフ)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · drying-equipment-calibration-overdue</span></td><td><span class="muted">moisture-meter / scale calibration past 90 days</span></td></tr>
+        <tr><td><code>batch-009</code></td><td>フルーキュア葉タバコ</td><td>European Union (General Food Law Regulation (EC) 178/2002)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · weight-variance-excessive</span></td><td><span class="muted">finished-package weight variance beyond tolerance</span></td></tr>
+        <tr><td><code>batch-010</code></td><td>柑橘類(生鮮)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · cold-storage-temp-out-of-range</span></td><td><span class="muted">cold-chain handling temperature above the window</span></td></tr>
+        <tr><td><code>batch-011</code></td><td>葉物野菜(生鮮)</td><td>United States (FSMA Produce Safety Rule / FDA)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · sanitation-score-insufficient</span></td><td><span class="muted">facility sanitation score below the floor</span></td></tr>
+        <tr><td><code>batch-012</code></td><td>紅茶(リーフ)</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="ok">承認・コミット済 · op-qa-1</span></td><td><span class="muted">quality concern raised and still unresolved</span></td></tr>
+        <tr><td><code>batch-013</code></td><td>柑橘類(生鮮)</td><td>European Union (General Food Law Regulation (EC) 178/2002)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · evidence-incomplete</span></td><td><span class="muted">evidence checklist missing the residue test</span></td></tr>
+        <tr><td><code>batch-014</code></td><td>フルーキュア葉タバコ</td><td>日本 (食品衛生法・厚生労働省)</td><td><span class="muted">未登録</span></td><td><span class="critical">HARD 保留 · no-spec-basis</span></td><td><span class="muted">clean lot, but the proposal carries no jurisdiction citation</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>品質実測 vs 作物ロット規格</h2>
+    <p class="muted">実測値は <code>postharvest.facts</code> の陽性述語（<code>moisture-in-range?</code> 等）で判定した。規格を持たない項目（乾燥工程の無い生鮮、冷蔵要件の無い乾物）は目標値を捏造せず「規格なし」と表示する。衛生スコア下限 75 と重量分散上限 50g は <code>postharvest.governor</code> の呼び出し側リテラル。</p>
+    <table>
+      <thead><tr><th>バッチ</th><th>作物ロット</th><th>水分%</th><th>水分規格</th><th>欠陥率%</th><th>上限</th><th>異物%</th><th>上限</th><th>低温℃</th><th>冷蔵規格</th><th>衛生</th><th>重量分散g</th><th>校正</th><th>品質フラグ</th></tr></thead>
+      <tbody>
+        <tr><td><code>batch-001</code></td><td>紅茶(リーフ)</td><td><span class="ok">3.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="ok">0.2</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-002</code></td><td>葉物野菜(生鮮)</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">1.0</span></td><td>≤ 2.0</td><td><span class="ok">0.1</span></td><td>≤ 0.3</td><td><span class="ok">2.0</span></td><td>1.5 – 2.5</td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-003</code></td><td>紅茶(リーフ)</td><td><span class="critical">2.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="ok">0.2</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-004</code></td><td>柑橘類(生鮮)</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="critical">4.0</span></td><td>≤ 3.0</td><td><span class="ok">0.1</span></td><td>≤ 0.5</td><td><span class="ok">8.0</span></td><td>7.0 – 9.0</td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-005</code></td><td>紅茶(リーフ)</td><td><span class="ok">3.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="critical">1.5</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-006</code></td><td>紅茶(リーフ)</td><td><span class="ok">3.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="ok">0.2</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-007</code></td><td>フルーキュア葉タバコ</td><td><span class="ok">13.0</span></td><td>12.0 – 14.0</td><td><span class="ok">2.0</span></td><td>≤ 8.0</td><td><span class="ok">0.2</span></td><td>≤ 1.0</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-008</code></td><td>紅茶(リーフ)</td><td><span class="ok">3.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="ok">0.2</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="critical">期限切れ</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-009</code></td><td>フルーキュア葉タバコ</td><td><span class="ok">13.0</span></td><td>12.0 – 14.0</td><td><span class="ok">2.0</span></td><td>≤ 8.0</td><td><span class="ok">0.2</span></td><td>≤ 1.0</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="critical">75</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-010</code></td><td>柑橘類(生鮮)</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">1.0</span></td><td>≤ 3.0</td><td><span class="ok">0.1</span></td><td>≤ 0.5</td><td><span class="critical">10.0</span></td><td>7.0 – 9.0</td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-011</code></td><td>葉物野菜(生鮮)</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">1.0</span></td><td>≤ 2.0</td><td><span class="ok">0.1</span></td><td>≤ 0.3</td><td><span class="ok">2.0</span></td><td>1.5 – 2.5</td><td><span class="critical">60</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-012</code></td><td>紅茶(リーフ)</td><td><span class="ok">3.0</span></td><td>2.5 – 3.5</td><td><span class="ok">2.0</span></td><td>≤ 5.0</td><td><span class="ok">0.2</span></td><td>≤ 0.5</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="critical">未解決</span></td></tr>
+        <tr><td><code>batch-013</code></td><td>柑橘類(生鮮)</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">1.0</span></td><td>≤ 3.0</td><td><span class="ok">0.1</span></td><td>≤ 0.5</td><td><span class="ok">8.0</span></td><td>7.0 – 9.0</td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+        <tr><td><code>batch-014</code></td><td>フルーキュア葉タバコ</td><td><span class="ok">13.0</span></td><td>12.0 – 14.0</td><td><span class="ok">2.0</span></td><td>≤ 8.0</td><td><span class="ok">0.2</span></td><td>≤ 1.0</td><td><span class="muted">—</span></td><td><span class="muted">規格なし</span></td><td><span class="ok">85</span></td><td><span class="ok">20</span></td><td><span class="ok">期限内</span></td><td><span class="ok">なし</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>作物ロット規格（postharvest.facts/crop-lot-types）</h2>
+    <p class="muted">ガバナが独立に突き合わせる参照表。このページはここから読むだけで、値を持たない。</p>
+    <table>
+      <thead><tr><th>ID</th><th>名称</th><th>水分目標</th><th>欠陥率上限</th><th>異物上限</th><th>冷蔵温度目標</th></tr></thead>
+      <tbody>
+        <tr><td><code>:produce/citrus</code></td><td>柑橘類(生鮮)</td><td><span class="muted">乾燥工程なし</span></td><td>≤ 3.0</td><td>≤ 0.5</td><td>8.0 ± 1.0</td></tr>
+        <tr><td><code>:produce/leafy-greens</code></td><td>葉物野菜(生鮮)</td><td><span class="muted">乾燥工程なし</span></td><td>≤ 2.0</td><td>≤ 0.3</td><td>2.0 ± 0.5</td></tr>
+        <tr><td><code>:tea/black-leaf</code></td><td>紅茶(リーフ)</td><td>3.0 ± 0.5</td><td>≤ 5.0</td><td>≤ 0.5</td><td><span class="muted">冷蔵要件なし</span></td></tr>
+        <tr><td><code>:tobacco/flue-cured</code></td><td>フルーキュア葉タバコ</td><td>13.0 ± 1.0</td><td>≤ 8.0</td><td>≤ 1.0</td><td><span class="muted">冷蔵要件なし</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>法域と必要証跡（postharvest.facts/jurisdictions）</h2>
+    <p class="muted"><code>:log-processing-batch</code> は、この一覧がバッチの <code>:evidence-checklist</code> に全て含まれない限り HARD 保留になる。</p>
+    <table>
+      <thead><tr><th>ID</th><th>名称</th><th>必要証跡</th><th>件数</th></tr></thead>
+      <tbody>
+        <tr><td><code>:eu/gfl</code></td><td>European Union (General Food Law Regulation (EC) 178/2002)</td><td><code>lot-intake-record</code> <code>cleaning-grading-log</code> <code>defect-inspection</code> <code>foreign-matter-test</code> <code>pest-inspection</code> <code>pesticide-residue-test</code> <code>weight-check</code></td><td>7</td></tr>
+        <tr><td><code>:jp/mhlw</code></td><td>日本 (食品衛生法・厚生労働省)</td><td><code>lot-intake-record</code> <code>cleaning-grading-log</code> <code>defect-inspection</code> <code>foreign-matter-test</code> <code>pest-inspection</code> <code>pesticide-residue-test</code> <code>weight-check</code></td><td>7</td></tr>
+        <tr><td><code>:us/fda</code></td><td>United States (FSMA Produce Safety Rule / FDA)</td><td><code>lot-intake-record</code> <code>cleaning-grading-log</code> <code>defect-inspection</code> <code>foreign-matter-test</code> <code>pest-inspection</code> <code>pesticide-residue-test</code> <code>weight-check</code></td><td>7</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>ガバナ・ゲート（postharvest.governor の公開 var から導出）</h2>
+    <p class="muted">許可された提案種別は <code>governor/allowed-ops</code> の 4 件のみ。この閉じた集合の外にある提案（乾燥・選別・包装機の直接制御など）は、信頼度に関わらず無条件に拒否される。信頼度の下限は <code>governor/confidence-floor</code> = 0.6。</p>
+    <table>
+      <thead><tr><th>提案種別</th><th>ゲート</th><th>ステーク</th></tr></thead>
+      <tbody>
+        <tr><td><code>:coordinate-shipment</code></td><td><span class="warn">実アクチュエーション · 常に人間承認（信頼度に関わらず）</span></td><td>高</td></tr>
+        <tr><td><code>:flag-quality-concern</code></td><td><span class="warn">常にエスカレーション · 信頼度だけでは自動解決しない</span></td><td>低</td></tr>
+        <tr><td><code>:log-processing-batch</code></td><td><span class="warn">実アクチュエーション · 常に人間承認（信頼度に関わらず）</span></td><td>高</td></tr>
+        <tr><td><code>:schedule-maintenance</code></td><td><span class="ok">hard 違反なし かつ 信頼度 ≥ 0.6 で自動コミット</span></td><td>低</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>HARD 保留の内訳（この run の台帳から集計）</h2>
+    <p class="muted">上書き不可の規則ごとの発火件数。件数と説明文はガバナが返した <code>:violations</code> そのもので、このページが書いた文言ではない。</p>
+    <table>
+      <thead><tr><th>規則</th><th>件数</th><th>対象バッチ</th><th>ガバナの説明</th></tr></thead>
+      <tbody>
+        <tr><td><code>:already-processed</code></td><td>1</td><td><code>batch-001</code></td><td>batch-001 は既に登録済み</td></tr>
+        <tr><td><code>:already-shipment-finalized</code></td><td>1</td><td><code>batch-001</code></td><td>batch-001 は既に出荷確定済み</td></tr>
+        <tr><td><code>:batch-not-registered</code></td><td>1</td><td><code>batch-999</code></td><td>batch-999 は施設に登録されたバッチ記録が無い -- 出荷調整提案は進められない</td></tr>
+        <tr><td><code>:cold-storage-temp-out-of-range</code></td><td>1</td><td><code>batch-010</code></td><td>batch-010 のコールドチェーン温度(10.0℃)が目標範囲外 -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:defect-rate-exceeded</code></td><td>1</td><td><code>batch-004</code></td><td>batch-004 の欠陥率(4.0%)が製品規格(3.0%)を上回る -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:drying-equipment-calibration-overdue</code></td><td>1</td><td><code>batch-008</code></td><td>batch-008 の乾燥/計量機器の校正が期限切れ -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:effect-not-propose</code></td><td>1</td><td><code>batch-002</code></td><td>この actor の提案は :propose 以外の :effect を持てない (got :commit)</td></tr>
+        <tr><td><code>:evidence-incomplete</code></td><td>1</td><td><code>batch-013</code></td><td>法域の必要書類(lot-intake-record/cleaning-grading-log/defect-inspection/pesticide-residue-test等)が充足していない状態での提案</td></tr>
+        <tr><td><code>:foreign-matter-exceeded</code></td><td>1</td><td><code>batch-005</code></td><td>batch-005 の異物混入率(1.5%)が製品規格範囲外 -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:moisture-out-of-target</code></td><td>1</td><td><code>batch-003</code></td><td>batch-003 の水分(2.0%)が目標範囲外 -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:no-spec-basis</code></td><td>1</td><td><code>batch-014</code></td><td>公式仕様の引用が無い提案は法域要件として扱えない</td></tr>
+        <tr><td><code>:op-not-allowed</code></td><td>1</td><td><code>batch-002</code></td><td>:control-drying-line はこのactorの許可された提案種別 (log-processing-batch/schedule-maintenance/flag-quality-concern/coordinate-shipment) に含まれない -- 乾燥/選別/包装機制御はこのactorに無い</td></tr>
+        <tr><td><code>:pest-infestation-detected</code></td><td>1</td><td><code>batch-006</code></td><td>batch-006 で害虫混入が検出された -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:pesticide-residue-exceeded</code></td><td>1</td><td><code>batch-007</code></td><td>batch-007 で残留農薬基準超過が検出された -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:quality-flag-unresolved</code></td><td>1</td><td><code>batch-012</code></td><td>batch-012 は未解決の品質フラグがある -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:sanitation-score-insufficient</code></td><td>1</td><td><code>batch-011</code></td><td>batch-011 の施設衛生/交差汚染防止スコア(60)が最低要件(75)を下回る -- バッチ登録提案は進められない</td></tr>
+        <tr><td><code>:weight-variance-excessive</code></td><td>1</td><td><code>batch-009</code></td><td>batch-009 の重量分散(75g)が許容範囲(50g)を超過 -- バッチ登録提案は進められない</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>監査台帳（この run）</h2>
+    <p class="muted">追記のみ。<code>governor/hold-fact</code> が発行したファクトと、承認・自動コミットをコンソールが記録したファクトを「発行元」列で区別する。</p>
+    <table>
+      <thead><tr><th>#</th><th>ファクト</th><th>発行元</th><th>提案種別</th><th>対象</th><th>処置</th><th>根拠規則</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><span class="warn">governor-hold（エスカレーション）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-001</code></td><td>hold</td><td><span class="muted">—</span></td></tr>
+        <tr><td>2</td><td><span class="ok">operator-approval</span></td><td><span class="muted">console harness</span></td><td><code>log-processing-batch</code></td><td><code>batch-001</code></td><td>approved</td><td><span class="muted">—</span></td></tr>
+        <tr><td>3</td><td><span class="warn">governor-hold（エスカレーション）</span></td><td>actor · governor/hold-fact</td><td><code>coordinate-shipment</code></td><td><code>batch-001</code></td><td>hold</td><td><span class="muted">—</span></td></tr>
+        <tr><td>4</td><td><span class="ok">operator-approval</span></td><td><span class="muted">console harness</span></td><td><code>coordinate-shipment</code></td><td><code>batch-001</code></td><td>approved</td><td><span class="muted">—</span></td></tr>
+        <tr data-hard-hold="1"><td>5</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-001</code></td><td>hold</td><td>already-processed</td></tr>
+        <tr data-hard-hold="1"><td>6</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>coordinate-shipment</code></td><td><code>batch-001</code></td><td>hold</td><td>already-shipment-finalized</td></tr>
+        <tr><td>7</td><td><span class="ok">auto-commit</span></td><td><span class="muted">console harness</span></td><td><code>schedule-maintenance</code></td><td><code>batch-002</code></td><td>auto-commit</td><td><span class="muted">—</span></td></tr>
+        <tr><td>8</td><td><span class="warn">governor-hold（エスカレーション）</span></td><td>actor · governor/hold-fact</td><td><code>schedule-maintenance</code></td><td><code>batch-002</code></td><td>hold</td><td><span class="muted">—</span></td></tr>
+        <tr><td>9</td><td><span class="ok">operator-approval</span></td><td><span class="muted">console harness</span></td><td><code>schedule-maintenance</code></td><td><code>batch-002</code></td><td>approved</td><td><span class="muted">—</span></td></tr>
+        <tr data-hard-hold="1"><td>10</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>control-drying-line</code></td><td><code>batch-002</code></td><td>hold</td><td>op-not-allowed</td></tr>
+        <tr data-hard-hold="1"><td>11</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>schedule-maintenance</code></td><td><code>batch-002</code></td><td>hold</td><td>effect-not-propose</td></tr>
+        <tr data-hard-hold="1"><td>12</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-003</code></td><td>hold</td><td>moisture-out-of-target</td></tr>
+        <tr data-hard-hold="1"><td>13</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-004</code></td><td>hold</td><td>defect-rate-exceeded</td></tr>
+        <tr data-hard-hold="1"><td>14</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-005</code></td><td>hold</td><td>foreign-matter-exceeded</td></tr>
+        <tr data-hard-hold="1"><td>15</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-006</code></td><td>hold</td><td>pest-infestation-detected</td></tr>
+        <tr data-hard-hold="1"><td>16</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-007</code></td><td>hold</td><td>pesticide-residue-exceeded</td></tr>
+        <tr data-hard-hold="1"><td>17</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-008</code></td><td>hold</td><td>drying-equipment-calibration-overdue</td></tr>
+        <tr data-hard-hold="1"><td>18</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-009</code></td><td>hold</td><td>weight-variance-excessive</td></tr>
+        <tr data-hard-hold="1"><td>19</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-010</code></td><td>hold</td><td>cold-storage-temp-out-of-range</td></tr>
+        <tr data-hard-hold="1"><td>20</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-011</code></td><td>hold</td><td>sanitation-score-insufficient</td></tr>
+        <tr data-hard-hold="1"><td>21</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-012</code></td><td>hold</td><td>quality-flag-unresolved</td></tr>
+        <tr><td>22</td><td><span class="warn">governor-hold（エスカレーション）</span></td><td>actor · governor/hold-fact</td><td><code>flag-quality-concern</code></td><td><code>batch-012</code></td><td>hold</td><td><span class="muted">—</span></td></tr>
+        <tr><td>23</td><td><span class="ok">operator-approval</span></td><td><span class="muted">console harness</span></td><td><code>flag-quality-concern</code></td><td><code>batch-012</code></td><td>approved</td><td><span class="muted">—</span></td></tr>
+        <tr data-hard-hold="1"><td>24</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-013</code></td><td>hold</td><td>evidence-incomplete</td></tr>
+        <tr data-hard-hold="1"><td>25</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>log-processing-batch</code></td><td><code>batch-014</code></td><td>hold</td><td>no-spec-basis</td></tr>
+        <tr data-hard-hold="1"><td>26</td><td><span class="critical">governor-hold（HARD）</span></td><td>actor · governor/hold-fact</td><td><code>coordinate-shipment</code></td><td><code>batch-999</code></td><td>hold</td><td>batch-not-registered</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>承認者の保持（実測）</h2>
+    <p class="muted">人間が署名した後、その承認者 ID がストア記録に残るかを実際に測った。測り方は「台帳のファクトに記録された承認者 ID が、そのバッチ記録のいずれかの値として現れるか」の走査で、特定のキー名を仮定していない——ストアが将来どんなキー名で承認者を持っても、この表は追従する。</p>
+    <table>
+      <thead><tr><th>提案種別</th><th>対象</th><th>承認者</th><th>コンソールが呼んだストア関数</th><th>実測結果</th></tr></thead>
+      <tbody>
+        <tr><td><code>log-processing-batch</code></td><td><code>batch-001</code></td><td><code>op-batch-1</code></td><td><code>store/log-batch</code></td><td><span class="ok">保持されている</span></td></tr>
+        <tr><td><code>coordinate-shipment</code></td><td><code>batch-001</code></td><td><code>op-ship-1</code></td><td><code>store/finalize-shipment</code></td><td><span class="critical">台帳にのみ存在 · 記録には残っていない</span></td></tr>
+        <tr><td><code>schedule-maintenance</code></td><td><code>batch-002</code></td><td><code>op-maint-1</code></td><td><span class="muted">該当する store 関数なし</span></td><td><span class="muted">ストア記録の変化なし</span></td></tr>
+        <tr><td><code>flag-quality-concern</code></td><td><code>batch-012</code></td><td><code>op-qa-1</code></td><td><span class="muted">該当する store 関数なし</span></td><td><span class="muted">ストア記録の変化なし</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h3>実測から導かれる欠陥（1）: 承認者を残せない出荷確定</h3>
+    <p>上の表で <span class="critical">台帳にのみ存在</span> と出た行は、人間の署名がストア記録を変えたにもかかわらず、その承認者 ID が記録側に1 つも残っていないことを意味する。<code>store/log-batch</code> は渡された記録をそのまま保持するので承認者は残るが、<code>store/finalize-shipment</code> はバッチ ID しか受け取らず、承認者を書き込む場所そのものが無い。つまり出荷確定については「誰が承認したか」を記録から復元できない。</p>
+    <p class="muted">この節は上の実測が欠落を示したときにだけ描画される。ストアが承認者を保持するようになれば、次回の生成でこの節は消える。「承認者が記録されていない」ことと「誰も承認していない」ことは区別して表示している——後者は台帳に <code>operator-approval</code> ファクトがそもそも現れない。</p>
+  </section>
+  <section class="card">
+    <h3>実測から導かれる欠陥（2）: 承認側の監査ファクトが出ない</h3>
+    <p><code>operation/run-operation</code> は <code>:ok?</code> が真の経路で <code>{:ok? true :facts []}</code> を返す——つまりガバナが自動で通した提案は監査ファクトを 1 件も残さない（この run の実測でも 0 件だった）。追記専用台帳が保留だけを記録し、確定を記録しないことになる。このページの「自動コミット」「承認・コミット済」の行は、そのためコンソールが <code>store/append-fact</code> で補って書いたもので、「発行元」列で <span class="muted">console harness</span> と明示している。</p>
+    <p class="muted">この節も実測が 0 件のときにだけ描画される。<code>run-operation</code> が確定ファクトを返すようになれば消える。</p>
+  </section>
+</main>
+<footer>
+  <p class="muted">生成: <code>clojure -M:dev:render-html</code> (<code>postharvest.render-html</code>)。同じ入力なら毎回バイト一致する（時刻・乱数をページに出さない）。配色・字面はこの repo が <code>docs/index.html</code> に vendoring 済みのデジタル庁デザインシステム(DADS)の primitive をビルド時に読み出したもので、外部依存を持たない（生成はオフラインで完結する）。</p>
+</footer>
+</body></html>
