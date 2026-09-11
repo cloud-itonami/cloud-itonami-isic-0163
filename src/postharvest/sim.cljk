@@ -2,7 +2,7 @@
   "Simulation driver for testing the post-harvest crop-processing
   operations actor end-to-end.
 
-  For CLI: clojure -M:dev:run
+  For CLI: kbb -M:dev:run
 
   Example flow:
     1. Start with empty store
