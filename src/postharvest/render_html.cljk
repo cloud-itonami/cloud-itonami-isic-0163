@@ -11,7 +11,7 @@
 
   This repo ships NO seed data: `postharvest.sim/-main` is a stub that
   prints `PostHarvest simulation: not yet implemented.` (verified by
-  running `clojure -M:dev:run` before this file was written), and
+  running `kbb -M:dev:run` before this file was written), and
   `postharvest.store` has no `seed-db`. So the console seeds its own
   scenario, and every value in it is traceable to something already in
   the repo:
@@ -68,7 +68,7 @@
   HARD-hold requirement is a build-time invariant rather than a
   convention.
 
-  Usage: `clojure -M:dev:render-html [out-file]`
+  Usage: `kbb -M:dev:render-html [out-file]`
   (default `docs/samples/operator-console.html`)."
   (:require [clojure.java.io :as io]
             [kotoba.lang.text :as str]
@@ -647,7 +647,7 @@
         _ (when-not (.exists f)
             (throw (ex-info (str "cannot read " product-page-path
                                  " -- run this from the repository root"
-                                 " (clojure -M:dev:render-html)")
+                                 " (kbb -M:dev:render-html)")
                             {:path (.getAbsolutePath f)})))
         css (slurp f)
         tokens (or (parse-root-tokens css)
@@ -814,7 +814,7 @@
 
      "</main>\n"
      "<footer>\n"
-     "  <p class=\"muted\">生成: <code>clojure -M:dev:render-html</code> "
+     "  <p class=\"muted\">生成: <code>kbb -M:dev:render-html</code> "
      "(<code>postharvest.render-html</code>)。同じ入力なら毎回バイト一致する"
      "（時刻・乱数をページに出さない）。配色・字面はこの repo が "
      "<code>docs/index.html</code> に vendoring 済みの"
