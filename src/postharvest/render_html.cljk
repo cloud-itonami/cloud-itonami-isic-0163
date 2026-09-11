@@ -25,7 +25,7 @@
       actuals 2.0/0.2 for dried goods and 1.0/0.1 for cold-chain lots,
       weight-variance 20, sanitation 85, calibration ten-days-ago) is
       field-for-field the `clean-batch` / `clean-cold-chain-batch`
-      fixtures in `test/postharvest/governor_test.cljc`
+      fixtures in `test/postharvest/governor_test.cljk`
     - the failing actuals are DERIVED from the crop-lot type's own window
       (e.g. `out-of-spec-defect` = the type's max + 1.0), never typed, so
       they cannot drift away from `facts` --- the two exceptions are the
@@ -121,7 +121,7 @@
 (defn- clean-batch
   "A batch that passes every Governor hard check, in the exact shape of
   the `clean-batch` / `clean-cold-chain-batch` fixtures in
-  `test/postharvest/governor_test.cljc`. Spec-relative actuals are read
+  `test/postharvest/governor_test.cljk`. Spec-relative actuals are read
   off the crop-lot type itself, so a dried good gets a moisture actual
   and no cold-chain actual, and a fresh lot the reverse --- never a
   fabricated target for a type that has none."
@@ -710,7 +710,7 @@
      "<code>postharvest.governor/check</code> → <code>postharvest.store</code> の実行結果で、"
      "手書きの結果は 1 件も無い。作物ロット規格・法域の必要証跡・引用する仕様名は "
      "<code>postharvest.facts</code> から、バッチ記録の形と clean 実測値は "
-     "<code>test/postharvest/governor_test.cljc</code> の fixture から取っている"
+     "<code>test/postharvest/governor_test.cljk</code> の fixture から取っている"
      "（<code>postharvest.sim</code> は未実装のスタブで、この repo には seed データが無い）。</p>\n"
      "    <ul>\n"
      "      <li><span class=\"critical\">HARD 保留 " hard-n " 件</span>"
