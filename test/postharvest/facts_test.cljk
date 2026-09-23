@@ -1,5 +1,5 @@
 (ns postharvest.facts-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [postharvest.facts :as facts]))
 
 ;; ──────────────────────── Crop-Lot Type Lookups ──────────────────────
