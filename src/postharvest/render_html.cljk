@@ -70,7 +70,7 @@
 
   Usage: `kbb -M:dev:render-html [out-file]`
   (default `docs/samples/operator-console.html`)."
-  (:require [clojure.java.io :as io]
+  (:require [kotoba.io :as io]
             [kotoba.lang.text :as str]
             [postharvest.facts :as facts]
             [postharvest.governor :as governor]
@@ -644,11 +644,11 @@
   lost its vendored token block or a referenced primitive."
   []
   (let [f (io/file product-page-path)
-        _ (when-not (.exists f)
+        _ (when-not (io/exists? f)
             (throw (ex-info (str "cannot read " product-page-path
                                  " -- run this from the repository root"
                                  " (kbb -M:dev:render-html)")
-                            {:path (.getAbsolutePath f)})))
+                            {:path (io/absolute-path f)})))
         css (slurp f)
         tokens (or (parse-root-tokens css)
                    (throw (ex-info (str "no vendored DADS :root token block in "
