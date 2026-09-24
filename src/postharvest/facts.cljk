@@ -23,7 +23,7 @@
   absent for dried goods). Pest infestation and pesticide-residue lab
   flags are genuine food-safety hazards this actor surfaces but never
   resolves on its own."
-  (:require [clojure.set :as set]))
+  (:require [kotoba.lang.coll :as set]))
 
 (def crop-lot-types
   "Valid post-harvest crop-lot categories and their safe processing/
